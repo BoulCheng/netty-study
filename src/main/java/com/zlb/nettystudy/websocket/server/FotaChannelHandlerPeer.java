@@ -16,13 +16,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class FotaChannelHandler extends SimpleChannelInboundHandler<Object> {
+public class FotaChannelHandlerPeer extends SimpleChannelInboundHandler<Object> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FotaChannelHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FotaChannelHandlerPeer.class);
 
     private static final String URI = "websocket";
 
@@ -32,7 +31,7 @@ public class FotaChannelHandler extends SimpleChannelInboundHandler<Object> {
 //    private static NotifyInfoManager notifyInfoManager = BeanUtil.getBean(NotifyInfoManager.class);
 
     public static void sendMessageToAll(String msg) {
-        for (Channel channel : GlobalUserUtil.channels) {
+        for (Channel channel : GlobalUserUtilPeer.channels) {
             channel.writeAndFlush(new TextWebSocketFrame(msg));
         }
     }
@@ -181,78 +180,10 @@ public class FotaChannelHandler extends SimpleChannelInboundHandler<Object> {
             LOGGER.error("【不支持二进制】");
             throw new UnsupportedOperationException("不支持二进制");
         }
+
         LOGGER.info("收到客户端请求：{}, localAddress:{}" + ((TextWebSocketFrame) msg).text(), ctx.channel().localAddress());
         ctx.channel().writeAndFlush(new TextWebSocketFrame(((TextWebSocketFrame) msg).text()));
         //ctx.channel().writeAndFlush(msg); //会发生 io.netty.util.IllegalReferenceCountException: refCnt: 0, decrement: 1
-
-        //可以对消息进行处理
-        //群发
-//        LOGGER.info (((TextWebSocketFrame) msg).text());
-//        for (Channel channel : GlobalUserUtil.channels) {
-//            channel.writeAndFlush(new TextWebSocketFrame(((TextWebSocketFrame) msg).text()));
-//        }
-//        ChannelModule channelModule = null;
-//        try {
-//            channelModule = JSON.parseObject(((TextWebSocketFrame) msg).text(), ChannelModule.class);
-//        } catch (Exception e) {
-//            LOGGER.error("doHandlerWebSocketFrame parseObject exception, msg:{}", ((TextWebSocketFrame) msg).text());
-//        }
-//
-//        Long userId = channelModule.getUserId();
-//        if (userId != null) {
-//            GlobalUserUtil.addUser(userId, ctx.channel());
-//        }
-//
-//        Integer reqType = channelModule.getReqType();
-//
-//        /**
-//         * K线ws直接响应首次请求
-//         */
-//        if (((Integer) ModuleEnum.KLINE.getCode()).equals(reqType) && KLinePushModeEnum.REQ.getCode().equals(channelModule.getType())) {
-//            //移除切换前的K线推送
-//            synchronized (ctx.channel()) {
-//                Map<Integer, ChannelModule> channelMap = GlobalUserUtil.channelMap.get(ctx.channel());
-//                if (null != channelMap) {
-//                    channelMap.remove(reqType);
-//                    GlobalUserUtil.channelMap.put(ctx.channel(), channelMap);
-//                }
-//            }
-//
-//            try {
-////                FotaChannelHandler.sendMessageToOne(kLineManager.getWsKlineData(channelModule), ctx.channel());
-//            } catch (Exception e) {
-//                LOGGER.error("pushKlineReqMessage message error", e);
-//            }
-//            return;
-//        }
-//
-//        /**
-//         * 历史K线ws推送
-//         */
-//        if (((Integer) ModuleEnum.HISTORY_KLINE.getCode()).equals(reqType)) {
-////            FotaChannelHandler.sendMessageToOne(kLineManager.getWsKlineData(channelModule), ctx.channel());
-//            return;
-//        }
-//
-//        /**
-//         * 保证金提醒和其他提醒登陆就连接
-//         */
-//        if (((Integer) ModuleEnum.MARGIN_NOTICE.getCode()).equals(reqType) && userId != null) {
-////            notifyInfoManager.pushLoginNotifyInfo(userId);
-//        }
-//
-//        Map<Integer, ChannelModule> channelModuleMap = GlobalUserUtil.channelMap.get(ctx.channel());
-//        String sessionId = channelModule.getSessionId();
-//        if (StringUtils.isBlank(sessionId)) {
-//            LOGGER.error("sessionId is blank! channelModule:{}", channelModule);
-//        } else {
-//            //更新为最新的sessionId
-//            channelModuleMap.put(ModuleEnum.SESSION_ID.getCode(), new ChannelModule(sessionId));
-//        }
-//        channelModuleMap.put(channelModule.getReqType(), channelModule);
-//        if (userId != null && !channelModuleMap.containsKey(ModuleEnum.USER_ID.getCode())) {
-//            channelModuleMap.put(ModuleEnum.USER_ID.getCode(), new ChannelModule(userId));
-//        }
     }
 
     /**
