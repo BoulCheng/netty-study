@@ -4,12 +4,15 @@ import com.alibaba.fastjson.JSON;
 import com.zlb.nettystudy.websocket.entity.ChannelModule;
 import com.zlb.nettystudy.websocket.entity.KLinePushModeEnum;
 import com.zlb.nettystudy.websocket.entity.ModuleEnum;
+import com.zlb.nettystudy.websocket.entity.NettyAttributeKeyConstant;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
 import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -48,6 +51,10 @@ public class FotaChannelHandler extends SimpleChannelInboundHandler<Object> {
      */
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+        //设置值 所有ChannelHandlerContext的channel共享
+        Attribute<Long> attribute = ctx.channel().attr(NettyAttributeKeyConstant.NETTY_CHANNEL_KEY);
+        attribute.setIfAbsent(10L);
+
         LOGGER.info("【handlerAdded】====>"+ctx.channel().id());
     }
 
@@ -180,6 +187,13 @@ public class FotaChannelHandler extends SimpleChannelInboundHandler<Object> {
         if(!(msg instanceof TextWebSocketFrame)){
             LOGGER.error("【不支持二进制】");
             throw new UnsupportedOperationException("不支持二进制");
+        }
+        Attribute<Long> attribute = ctx.channel().attr(NettyAttributeKeyConstant.NETTY_CHANNEL_KEY);
+        if (attribute.get() != null) {
+            System.out.println("attribute.get():" + attribute.get());
+        } else {
+            System.out.println("attribute.get() is null");
+            attribute.setIfAbsent(10L);
         }
         LOGGER.info("收到客户端请求：{}, localAddress:{}" + ((TextWebSocketFrame) msg).text(), ctx.channel().localAddress());
         ctx.channel().writeAndFlush(new TextWebSocketFrame(((TextWebSocketFrame) msg).text()));
